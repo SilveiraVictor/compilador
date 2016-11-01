@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "analex.h"
+#include "anasin.h"
 
 /*
 Lembrar de usar o retorno das funcoes
@@ -10,7 +11,7 @@ int inicia_sintatico(FILE* ptr){
     int flag;
     token tok,taux;
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     inicia_fila_tokens();
     flag = nextTokens(ptr,&tok);
     if(flag != 1) return flag;
@@ -68,7 +69,7 @@ int inicia_sintatico(FILE* ptr){
 
 int decl(FILE *ptr){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     token tok, taux;
     int i=0,flag;
     printf("ENTROU EM DECL\n");
@@ -167,7 +168,7 @@ int decl(FILE *ptr){
 
 int func(FILE* ptr){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     token tok;
     int i=0,flag;
     printf("ENTROU EM FUNC fila :\n");
@@ -260,7 +261,7 @@ int func(FILE* ptr){
 }
 
 int tipo_param(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     token tok;
     int flag;
@@ -361,7 +362,7 @@ int tipo_param(FILE* ptr){
 }
 
 int decl_var(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok;
@@ -406,7 +407,7 @@ int decl_var(FILE* ptr){
 }
 
 int cmd(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok,taux;
@@ -635,7 +636,7 @@ int cmd(FILE* ptr){
 }
 
 int expr(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok;
@@ -657,7 +658,7 @@ int expr(FILE* ptr){
 }
 
 int expr_simp(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok;
@@ -694,7 +695,7 @@ int expr_simp(FILE* ptr){
 }
 
 int termo(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok;
@@ -720,7 +721,7 @@ int termo(FILE* ptr){
 }
 
 int fator(FILE *ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern  int indice_fila;
     int flag;
     token tok;
@@ -796,7 +797,7 @@ int fator(FILE *ptr){
 }
 
 int atrib(FILE* ptr){
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
     token tok;
@@ -845,7 +846,7 @@ int atrib(FILE* ptr){
 
 void inicia_fila_tokens(){
     int i;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     indice_fila = 0;
     for(i=0;i<5;i++){
@@ -857,7 +858,7 @@ void inicia_fila_tokens(){
 
 void get_token_fila(token* t){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     int i;
     t->type = fila_tokens[0].type;
     strcpy(t->value,fila_tokens[0].value);
@@ -870,7 +871,7 @@ void get_token_fila(token* t){
 
 void por_de_volta(token t){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     int i;
     indice_fila++;
     for(i = 0;i<indice_fila;i++){
@@ -882,7 +883,7 @@ void por_de_volta(token t){
 
 void remove_elemento_fila(){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     fila_tokens[indice_fila].type = -1;
     strcpy(fila_tokens[indice_fila].value,"");
     indice_fila--;
@@ -891,7 +892,7 @@ void remove_elemento_fila(){
 
 void imprimir_fila(){
     extern int indice_fila;
-    extern token fila_tokens[10];
+    extern token fila_tokens[TAM_FILA];
     int i;
     if(indice_fila==0) printf("--- FILA  VAZIA ---\n");
     for(i = 0;i<indice_fila;i++){

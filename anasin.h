@@ -2,8 +2,7 @@
 #define ANASIN_H
 #include "analex.h"
 
-token fila_tokens[10];
-int indice_fila = 0;
+#define TAM_FILA 50
 
 int inicia_sintatico(FILE* ptr);
 int decl(FILE *ptr);

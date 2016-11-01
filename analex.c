@@ -411,6 +411,3 @@ void imprimirArrayTokens(){
     }
 }
 
-classe classificarToken(token lexema){
-
-}
