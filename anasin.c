@@ -91,7 +91,7 @@ int decl(FILE *ptr){
                     get_token_fila(&tok);
                 }else{
                     flag = nextTokens(ptr,&tok);
-                    if(flag != 1) return flag;
+                    if(flag != 1) return flag;                                              
                 }
                 if(strcmp(tok.value,"(")){
                         tipo_param(ptr);
@@ -261,7 +261,7 @@ int func(FILE* ptr){
 
 int tipo_param(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     token tok;
     int flag;
     printf("ENTROU TIPO_PARAM file:\n");
@@ -362,7 +362,7 @@ int tipo_param(FILE* ptr){
 
 int decl_var(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     int flag;
     token tok;
     printf("ENTROU DECL_VAR fila:\n");
@@ -407,7 +407,7 @@ int decl_var(FILE* ptr){
 
 int cmd(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     int flag;
     token tok,taux;
     printf("ENTROU CMD\n");
@@ -636,7 +636,7 @@ int cmd(FILE* ptr){
 
 int expr(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     int flag;
     token tok;
     printf("ENTROU EXPR\n");
@@ -695,7 +695,7 @@ int expr_simp(FILE* ptr){
 
 int termo(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     int flag;
     token tok;
     fator(ptr);
@@ -721,7 +721,7 @@ int termo(FILE* ptr){
 
 int fator(FILE *ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern  int indice_fila;
     int flag;
     token tok;
     printf("ENTROU FATOR\n");
@@ -797,7 +797,7 @@ int fator(FILE *ptr){
 
 int atrib(FILE* ptr){
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     int flag;
     token tok;
     printf("ENTROU ATRIB\n");
@@ -846,7 +846,7 @@ int atrib(FILE* ptr){
 void inicia_fila_tokens(){
     int i;
     extern token fila_tokens[10];
-    extern indice_fila;
+    extern int indice_fila;
     indice_fila = 0;
     for(i=0;i<5;i++){
         fila_tokens[i].type = -1;
