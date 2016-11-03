@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "analex.h"
+#include "anasin.h"
 
 /*
 Lembrar de usar o retorno das funcoes
