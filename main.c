@@ -3,8 +3,8 @@
 #include "analex.h"
 #include "anasin.h"
 
-extern int indice_fila;
-extern token fila_tokens[10];
+int indice_fila;
+token fila_tokens[10];
 
 int main(){
     FILE* ptr;
