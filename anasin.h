@@ -2,9 +2,6 @@
 #define ANASIN_H
 #include "analex.h"
 
-token fila_tokens[10];
-int indice_fila = 0;
-
 int inicia_sintatico(FILE* ptr);
 int decl(FILE *ptr);
 int func(FILE *ptr);
