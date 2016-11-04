@@ -9,9 +9,12 @@ int indice_fila = 0;
 int main(){
     FILE* ptr;
     token lex;
-    int erro_ou_nao;
+    int erro_ou_nao = 1;
     ptr = abrir_arquivo("codigo.txt");
-    inicia_sintatico(ptr);
+    while(erro_ou_nao == 1){
+	    erro_ou_nao = inicia_sintatico(ptr);
+		printf("passou uma vez res = %d\n",erro_ou_nao);
+	}
     return 0;
 }
 

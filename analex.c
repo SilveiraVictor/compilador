@@ -221,7 +221,8 @@ int nextTokens(FILE *arquivo,token *lexema){
                 (*lexema).type =estado;
                 strcpy((*lexema).value,token);
                 ungetc(caracter_lido,arquivo);
-                return 1;
+		nextTokens(arquivo,lexema);                
+		return 1;
                 break;
             case 13:
                 if(caracter_lido == '*'){
@@ -346,7 +347,11 @@ int nextTokens(FILE *arquivo,token *lexema){
                     token[indice_token++] = caracter_lido;
                     estado = 14;
                 }else{
-                    return ERROR;
+		    		token[indice_token] = '\0';
+                    (*lexema).type =estado;
+                    strcpy((*lexema).value,token);
+                    ungetc(caracter_lido,arquivo);
+		    return 1;
                 }
                 break;
             case 33:
