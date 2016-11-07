@@ -40,7 +40,7 @@ enum operador_logico{
     AND, NOT , OR
 }OPERADOR_LOGICO;
 
-static char palavras_reservadas[8][7] = { "if", "while", "for", "int", "float", "double", "char", "void" };
+static char palavras_reservadas[12][7] = { "if","else", "while", "for", "int", "float","bool", "char", "void", "return", "true", "false" };
 
 
 static char estados_finais[27][16] = {"", "FIM_COLCHETE", "INI_COLCHETE", "ASTERISCO", "OP_MATEMATICO", "OP_COMPARACAO", "OP_COMPARACAO",
@@ -55,4 +55,5 @@ FILE* abrir_arquivo(char*);
 int nextTokens(FILE*,token*);
 void imprimirArrayTokens();
 void porEmArrayDeTokens(char*,int);
+void classificar_keyword(token *lex);
 #endif // ANALEX_H

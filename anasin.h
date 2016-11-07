@@ -2,7 +2,7 @@
 #define ANASIN_H
 #include "analex.h"
 
-
+#define SINTAX_ERROR -2
 #define TAM_FILA 50
 
 int inicia_sintatico(FILE* ptr);

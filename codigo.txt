@@ -1,2 +1,3 @@
-int id1 (int id2, int id3, int id4[]);
-
+char if(int argc,char argv[]){
+	argc = 1 || 4; 
+}

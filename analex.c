@@ -213,6 +213,7 @@ int nextTokens(FILE *arquivo,token *lexema){
                     (*lexema).type =estado;
                     strcpy((*lexema).value,token);
                     ungetc(caracter_lido,arquivo);
+					classificar_keyword(lexema);
                     return 1;
                 }
                 break;
@@ -400,6 +401,17 @@ int nextTokens(FILE *arquivo,token *lexema){
         }
     }
     return 1;
+}
+
+void classificar_keyword(token *lex){
+	int i;
+	if(lex->type != 11) return;
+	for(i=0;i<12;i++){
+		if(strcmp(lex->value,palavras_reservadas[i]) == 0){
+			lex->type = 50;			
+			return;		
+		}
+	}
 }
 
 void porEmArrayDeTokens(char* token,int estado){
