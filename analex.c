@@ -268,7 +268,7 @@ int nextTokens(FILE *arquivo,token *lexema){
             case 24:
                 if(caracter_lido == '='){
                     token[indice_token++] = caracter_lido;
-                    estado = 25;
+                    estado = 6;
                 }else{
                     token[indice_token] = '\0';
                     (*lexema).type =estado;
