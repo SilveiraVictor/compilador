@@ -1,6 +1,11 @@
-int function(int argc,char argv[]){
-	if(id == 1){
-	    if(id == 1){}else;
-	}else{}
+int soma(float x, float y){
+    int total;
+    total = x+y;
+    return total;
 }
 
+int main(void){
+    float z;
+    for(z=0;z<50;z=z+z){}
+    return soma(z,z+1);
+}
