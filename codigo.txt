@@ -1,5 +1,6 @@
 int function(int argc,char argv[]){
 	if(id == 1){
-		id = id +1;	
-	}  
+	    if(id == 1){}else;
+	}else{}
 }
+
