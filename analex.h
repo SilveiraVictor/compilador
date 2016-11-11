@@ -28,9 +28,9 @@ enum sinal{
     MAIS, MENOS, MULT, DIVI, APARE, FPARE, ACOLH, FCOLH, ACHAV, FCHAV, PVIRG, ATRIB
 }SINAL;
 
-enum constante{
-    INTEIRA, REAL, LITERAL, CHAR
-}CONSTANTE;
+//enum constante{
+//    INTEIRA, REAL, LITERAL, CHAR
+//}CONSTANTE;
 
 enum comparacao{
     MAIOR, MENOR, IGUAL, MENORQ, MAIORQ, DIFERENTE

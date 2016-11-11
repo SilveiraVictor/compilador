@@ -1,11 +1,1 @@
-int soma(float x, float y){
-    int total;
-    total = x+y;
-    return total;
-}
-
-int main(void){
-    float z;
-    for(z=0;z<50;z=z+z){}
-    return soma(z,z+1);
-}
+int main(int arg), teste(int aer) ;

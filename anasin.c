@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include "analex.h"
 #include "anasin.h"
+#include "simboltable.h"
 
 /*
-Lembrar de usar o retorno das funcoes
+Lembrar de usar o retorno das funcoesc
 */
 
+nodo_simbol pilha[TAM_PILHA];
+int ind=0;
 
 int inicia_sintatico(FILE* ptr){
     int flag;
@@ -13,6 +16,7 @@ int inicia_sintatico(FILE* ptr){
     extern int indice_fila;
     extern token fila_tokens[TAM_FILA];
     inicia_fila_tokens();
+	iniciar_pilha(pilha);
     flag = nextTokens(ptr,&tok);
     if(flag != 1) return flag;
     if( (! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool"))){
@@ -38,7 +42,7 @@ int inicia_sintatico(FILE* ptr){
             if(flag != 1) return flag;
         }
 		//printf("val = %s\n",tok.value);
-        if(!strcmp(tok.value,";")) return 1;
+        if(!strcmp(tok.value,";")){imprimir(pilha,&ind); return 1;}
         else return SINTAX_ERROR;
     }else if(!strcmp(tok.value,"(")){
 			//printf("if else\n");
@@ -54,6 +58,7 @@ int inicia_sintatico(FILE* ptr){
             if(!strcmp(tok.value,";")){
                 flag = decl(ptr);
 				if(flag != 1) return flag;
+				imprimir(pilha,&ind);
                 return 1;
             }else if(!strcmp(tok.value,",")){
                 flag = decl(ptr);
@@ -64,11 +69,12 @@ int inicia_sintatico(FILE* ptr){
                     flag = nextTokens(ptr,&tok);
                     if(flag != 1) return flag;
                 }
-                if(!strcmp(tok.value,";")) return 1;
+                if(!strcmp(tok.value,";")){ imprimir(pilha,&ind);return 1;}
                 else return SINTAX_ERROR;
             }else if(!strcmp(tok.value,"{")){
                 flag = func(ptr);
 				if(flag != 1) return flag;
+				imprimir(pilha,&ind);
                 return 1;
             }else return SINTAX_ERROR;
     }else return SINTAX_ERROR;
@@ -79,7 +85,9 @@ int decl(FILE *ptr){
     extern token fila_tokens[TAM_FILA];
     token tok, taux;
     int i=0,flag;
+    int lastType;
     printf("ENTROU EM DECL\n");
+    set_escopo(pilha,0,&ind);
 	//imprimir_fila();
     if(indice_fila > 0){
         get_token_fila(&tok);
@@ -90,6 +98,8 @@ int decl(FILE *ptr){
     if(!strcmp(tok.value,"void")){
 		//printf("encontrou void\n");
 		do{
+			set_tipo(pilha,VOID,&ind);
+			set_isFunc(pilha,1,&ind);
 		    if(indice_fila > 0){
 		       get_token_fila(&tok);
 		    }else{
@@ -97,7 +107,9 @@ int decl(FILE *ptr){
 		        if(flag != 1) return flag;
 		    }
             if(tok.type == 11){
-				//printf("DECL encontrou ID\n");                
+				//printf("DECL encontrou ID\n");
+				if(procurar_elemento(tok.value,0,pilha,&ind) == 1) return ERROR_SIMBOL;                
+				set_nome(pilha,tok.value,&ind);ind++;
 				if(indice_fila > 0){
                     get_token_fila(&tok);
                 }else{
@@ -131,63 +143,74 @@ int decl(FILE *ptr){
         return 1;
     }else if((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool"))){
 		//printf("encontrou tipo\n");        
-		do{		
-		if(indice_fila > 0){
-        	get_token_fila(&tok);
-		}else{
-	        flag = nextTokens(ptr,&tok);
-	   	 	if(flag != 1) return flag;
-		}
-        if(tok.type == 11){
-			//printf("encontrou ID\n");            
-			taux = tok;
-            if(indice_fila > 0){
-                get_token_fila(&tok);
-            }else{
-                flag = nextTokens(ptr,&tok);
-                if(flag != 1) return flag;
-            }
-            if(!strcmp(tok.value,"(")){
-				//printf("enc (\n");                
-				flag = tipo_param(ptr);
-				if(flag != 1) return flag;
-                if(indice_fila > 0){
-                    get_token_fila(&tok);
-                }else{
-                    flag = nextTokens(ptr,&tok);
-                    if(flag != 1) return flag;
-                }
-                if(!strcmp(tok.value,")")){
-					//printf("enc )\n");                    
-					if(indice_fila > 0){
-                        get_token_fila(&tok);
-                    }else{
-                        flag = nextTokens(ptr,&tok);
-                        if(flag != 1) return flag;
-                    }
-					//printf("val = %s\n",tok.value);
-                }else return SINTAX_ERROR;
-            }else{
-                por_de_volta(tok);
-                por_de_volta(taux);
-                do{
-                    flag = decl_var(ptr);
+		if(!strcmp(tok.value,"char")){set_tipo(pilha,CHAR,&ind); lastType = CHAR;
+		}else if((!strcmp(tok.value,"int"))){ set_tipo(pilha,INT,&ind); lastType = INT;
+		}else if((!strcmp(tok.value,"float"))){ set_tipo(pilha,FLOAT,&ind);lastType = FLOAT;
+		}else{ set_tipo(pilha,BOOL,&ind);lastType = BOOL; }
+		do{
+			set_tipo(pilha,lastType,&ind);
+			set_isFunc(pilha,1,&ind);
+			if(indice_fila > 0){
+		    	get_token_fila(&tok);
+			}else{
+			    flag = nextTokens(ptr,&tok);
+		   	 	if(flag != 1) return flag;
+			}
+		    if(tok.type == 11){
+				printf("encontrou ID\n");
+				if(procurar_elemento(tok.value,0,pilha,&ind) == 1) return ERROR_SIMBOL;                
+				set_nome(pilha,tok.value,&ind);ind++;            
+				printf("indice = %d\n",ind);
+				taux = tok;
+		        if(indice_fila > 0){
+		            get_token_fila(&tok);
+		        }else{
+		            flag = nextTokens(ptr,&tok);
+		            if(flag != 1) return flag;
+		        }
+		        if(!strcmp(tok.value,"(")){
+					printf("enc (\n");                
+					flag = tipo_param(ptr);
 					if(flag != 1) return flag;
-                    if(indice_fila > 0){
-                        get_token_fila(&tok);
-                    }else{
-                        flag = nextTokens(ptr,&tok);
-                        if(flag != 1) return flag;
-                    }
-                }while(!strcmp(tok.value,","));
-				por_de_volta(tok);
-				//printf("passou do while\n");
-                return 1;
-            }
-        }else return SINTAX_ERROR;
-		//printf("val = %s\n",tok.value);
-    }while(!strcmp(tok.value,","));
-	//printf("chegogu nesse\n");    
+		            if(indice_fila > 0){
+		                get_token_fila(&tok);
+		            }else{
+		                flag = nextTokens(ptr,&tok);
+		                if(flag != 1) return flag;
+		            }
+		            if(!strcmp(tok.value,")")){
+						printf("enc )\n");                    
+						if(indice_fila > 0){
+		                    get_token_fila(&tok);
+		                }else{
+		                    flag = nextTokens(ptr,&tok);
+		                    if(flag != 1) return flag;
+		                }
+						//printf("val = %s\n",tok.value);
+		            }else return SINTAX_ERROR;
+		        }else{
+		            por_de_volta(tok);
+		            por_de_volta(taux);
+		            do{
+		                flag = decl_var(ptr);
+						if(flag != 1) return flag;
+		                if(indice_fila > 0){
+		                    get_token_fila(&tok);
+		                }else{
+		                    flag = nextTokens(ptr,&tok);
+		                    if(flag != 1) return flag;
+		                }
+		            }while(!strcmp(tok.value,","));
+					por_de_volta(tok);
+					printf("passou do while\n");
+		            return 1;
+		        }
+		    }else return SINTAX_ERROR;
+			printf("val = %s\n",tok.value);
+    	}while(!strcmp(tok.value,","));
+    	por_de_volta(tok);
+		printf("chegogu nesse\n");
+		return 1;    
 	}else return SINTAX_ERROR;
 }
 
@@ -305,10 +328,10 @@ int tipo_param(FILE* ptr){
         if(flag != 1) return flag;
     }
     if(!strcmp(tok.value,"void")){
-		//printf("encontrado void\n");
+		printf("encontrado void\n");
         return 1;
     }else if((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool"))){
-		//printf("encontrado tipo\n");
+		printf("encontrado tipo\n");
 		do{        
 			if(indice_fila > 0){
             	get_token_fila(&tok);
@@ -317,7 +340,7 @@ int tipo_param(FILE* ptr){
 		        if(flag != 1) return flag;
        	 	}
             if(tok.type == 11){
-				//printf("encontrado ID\n");
+				printf("encontrado ID\n");
                 if(indice_fila > 0){
                     get_token_fila(&tok);
                 }else{
@@ -325,7 +348,7 @@ int tipo_param(FILE* ptr){
                     if(flag != 1) return flag;
                 }
                 if(!strcmp(tok.value,"[")){
-				   //printf("encontrado [\n");
+				   printf("encontrado [\n");
                    if(indice_fila > 0){
                         get_token_fila(&tok);
                     }else{
@@ -357,7 +380,7 @@ int tipo_param(FILE* ptr){
                     }
                     else return SINTAX_ERROR;
                 }else if(!strcmp(tok.value,",")){
-					//printf("encontrado ,\n");
+					printf("encontrado ,\n");
                     if(indice_fila > 0){
                         get_token_fila(&tok);
                     }else{
@@ -369,7 +392,7 @@ int tipo_param(FILE* ptr){
                     return 1;
                 }
             }else if(strcmp(tok.value,"&")){
-				//printf("encontrado &\n");
+				printf("encontrado &\n");
                 if(indice_fila > 0){
                     get_token_fila(&tok);
                 }else{
@@ -391,7 +414,7 @@ int tipo_param(FILE* ptr){
                         }else{
                             flag = nextTokens(ptr,&tok);
                             if(flag != 1) return flag;
-                        }
+                	        }
                         if(!((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool")))) return SINTAX_ERROR;
                     }else{
                         por_de_volta(tok);
@@ -462,7 +485,7 @@ int cmd(FILE* ptr){
     }
 	//printf("val = %s\n",tok.value);
     if(!strcmp(tok.value,"if")){
-		printf("CMD IF\n");
+		//printf("CMD IF\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -470,7 +493,7 @@ int cmd(FILE* ptr){
             if(flag != 1) return flag;
         }
         if(!strcmp(tok.value,"(")){
-			printf("CMD (\n");
+			//printf("CMD (\n");
             flag = expr(ptr);
 			if(flag != 1) return flag;
 			if(indice_fila > 0){
@@ -480,7 +503,7 @@ int cmd(FILE* ptr){
                 if(flag != 1) return flag;
             }
             if(!strcmp(tok.value,")")){
-				printf("CMD )\n");
+				//printf("CMD )\n");
                 //if(indice_fila > 0){
                 //    get_token_fila(&tok);
                 //}else{
@@ -496,7 +519,7 @@ int cmd(FILE* ptr){
                     if(flag != 1) return flag;
                 }
                 if(!strcmp(tok.value,"else")){
-					printf("CMD ELSE\n");
+					//printf("CMD ELSE\n");
                     flag = cmd(ptr);
 					if(flag != 1) return flag;
                     return 1;
@@ -507,7 +530,7 @@ int cmd(FILE* ptr){
             }else return SINTAX_ERROR;
         }else return SINTAX_ERROR;
     }else if(!strcmp(tok.value,"while")){
-		printf("CMD WHILE\n");
+		//printf("CMD WHILE\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -532,7 +555,7 @@ int cmd(FILE* ptr){
             }else return SINTAX_ERROR;
         }else return SINTAX_ERROR;
     }else if(!strcmp(tok.value,"for")){
-		printf("CMD FOR\n");
+		//printf("CMD FOR\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -603,7 +626,7 @@ int cmd(FILE* ptr){
             return 1;
         }else return SINTAX_ERROR;
     }else if(!strcmp(tok.value,"return")){
-		printf("CMD return\n");
+		//printf("CMD return\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -625,7 +648,7 @@ int cmd(FILE* ptr){
             else return 1;
         }else return 1;
     }else if(tok.type == 11){
-		printf("CMD ID\n");
+		//printf("CMD ID\n");
         taux = tok;
         if(indice_fila > 0){
             get_token_fila(&tok);
@@ -693,7 +716,7 @@ int cmd(FILE* ptr){
             }
         }
     }else if(!strcmp(tok.value,"{")){
-		printf("CMD {\n");
+		//printf("CMD {\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -714,7 +737,7 @@ int cmd(FILE* ptr){
         }
         return 1;
     }else if(!strcmp(tok.value,";")){
-        printf("CMD ;\n");
+        //printf("CMD ;\n");
         return 1;
     }else return SINTAX_ERROR;
 

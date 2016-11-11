@@ -13,7 +13,7 @@ int main(){
     ptr = abrir_arquivo("codigo.txt");
     while(erro_ou_nao == 1){
 	    erro_ou_nao = inicia_sintatico(ptr);
-		printf("passou uma vez res = %d\n",erro_ou_nao);
+		printf("passou uma vez res = %d\n\n",erro_ou_nao);
 	}
     return 0;
 }
