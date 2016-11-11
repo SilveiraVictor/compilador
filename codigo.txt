@@ -1,1 +1,8 @@
-int main(int arg), teste(int aer) ;
+void main(int argc);
+
+int main(int argc){
+	int teste;
+	char a,c,d[5];
+	float b;
+	bool flag;
+}
