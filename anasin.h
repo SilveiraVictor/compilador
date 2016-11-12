@@ -8,8 +8,8 @@
 int inicia_sintatico(FILE* ptr);
 int decl(FILE *ptr);
 int func(FILE *ptr);
-int decl_var(FILE* ptr,int escopo, int tipo);
-int tipo_param(FILE* ptr,int isDecl,int*);
+int decl_var(FILE* ptr,int escopo, int tipo,int *numvar);
+int tipo_param(FILE* ptr,int isDecl,int*,int);
 int cmd(FILE* ptr);
 int expr(FILE* ptr);
 int expr_simp(FILE* ptr);

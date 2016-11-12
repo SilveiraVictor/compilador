@@ -24,7 +24,13 @@ typedef struct nodo_simbol{
 	int  categoria;
 	int  endereco;
 	int  zombie;
+	int  label;
 }nodo_simbol;
+
+typedef struct escAdd{	
+	int escopo;
+	int add;
+}escAdd;
 
 void iniciar_pilha(nodo_simbol*);
 
@@ -35,16 +41,21 @@ void set_escopo(nodo_simbol*,int,int*);
 void set_zombie(nodo_simbol*,int,int*);
 void set_endereco(nodo_simbol*,int,int*);
 void set_tamanho(nodo_simbol*,int,int*);
+void set_label(nodo_simbol*,int,int*);
 
 void inserir_pilha(nodo_simbol element, nodo_simbol *pilha, int *indicador);
 
 int procurar_elemento(char* nome,int escopo, nodo_simbol *pilha,int *indicador);
 
-int pegar_param(char *nome,nodo_simbol* pilha,int *indicador,int* tipos);
+int pegar_param(nodo_simbol* pilha,int pos,int* tipos);
 
 int conferir_tipo_func(int tipo,nodo_simbol *pilha,int pos);
 
 void remover_elemento(char* nome,int escopo, nodo_simbol *pilha,int *indicador);
+
+int destruir_func(nodo_simbol*,int*);
+
+escAdd get_adress(char *nome,nodo_simbol *pilha,int *indicador);
 
 void imprimir(nodo_simbol*,int*);
 

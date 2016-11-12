@@ -8,6 +8,7 @@ token fila_tokens[TAM_FILA];
 int indice_fila = 0;
 nodo_simbol pilha[TAM_PILHA];
 int ind;
+int label=0;
 
 int main(){
 	char resp[4][16] = {"SUCESSO","ERRO LEXICO","ERRO SINTATICO","ERRO SEMANTICO"};	

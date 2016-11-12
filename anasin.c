@@ -8,7 +8,7 @@ Lembrar de usar o retorno das funcoesc
 */
 
 extern nodo_simbol pilha[TAM_PILHA];
-extern int ind;
+extern int ind,label;
 
 int inicia_sintatico(FILE* ptr){
     int flag;
@@ -81,9 +81,9 @@ int decl(FILE *ptr){
     extern int indice_fila;
     extern token fila_tokens[TAM_FILA];
     token tok, taux;
-    int i=0,flag;
+    int i=0,flag,numvar=0;
     int lastType;
-    printf("ENTROU EM DECL\n");
+    //printf("ENTROU EM DECL\n");
 	//imprimir_fila();
     if(indice_fila > 0){
         get_token_fila(&tok);
@@ -98,6 +98,7 @@ int decl(FILE *ptr){
 			set_categoria(pilha,FUNC,&ind);
 			set_escopo(pilha,0,&ind);
 			set_zombie(pilha,1,&ind);
+			set_tamanho(pilha,0,&ind);
 		    if(indice_fila > 0){
 		       get_token_fila(&tok);
 		    }else{
@@ -116,7 +117,7 @@ int decl(FILE *ptr){
                 }
                 if(!strcmp(tok.value,"(")){
 						//printf("DECL encontrou (\n");
-                        flag = tipo_param(ptr,1,NULL);
+                        flag = tipo_param(ptr,1,NULL,0);
 						if(flag != 1) return flag;
 						//imprimir_fila();
                         if(indice_fila > 0){
@@ -169,7 +170,7 @@ int decl(FILE *ptr){
 					set_zombie(pilha,1,&ind);					
 					set_nome(pilha,taux.value,&ind);ind++;				
 					 //printf("enc (\n");                
-					flag = tipo_param(ptr,1,NULL);
+					flag = tipo_param(ptr,1,NULL,0);
 					if(flag != 1) return flag;
 		            if(indice_fila > 0){
 		                get_token_fila(&tok);
@@ -191,7 +192,7 @@ int decl(FILE *ptr){
 		            por_de_volta(tok);
 		            por_de_volta(taux);
 		            do{
-		                flag = decl_var(ptr,0,lastType);
+		                flag = decl_var(ptr,0,lastType,&numvar);
 						if(flag != 1) return flag;
 		                if(indice_fila > 0){
 		                    get_token_fila(&tok);
@@ -217,8 +218,10 @@ int func(FILE* ptr){
     extern int indice_fila;
     extern token fila_tokens[TAM_FILA];
     token tok;
-    int i=0,flag,lastType,pos;
-    printf("ENTROU EM FUNC\n");
+	int filaTipos[6],qtdParam=0,numVar=0;
+    int i=0,flag,lastType,pos,declarar;
+	char nomeFunc[20];    
+	//printf("ENTROU EM FUNC\n");
     //imprimir_fila();
     if(indice_fila > 0){
         get_token_fila(&tok);
@@ -226,12 +229,16 @@ int func(FILE* ptr){
         flag = nextTokens(ptr,&tok);
         if(flag != 1) return flag;
     }
+	printf("GOTO L%d\n",label+1);
+	printf("LABEL L%d\n",label);label++;
+	printf("INIPR\n");
     if( (!strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool")) || (!strcmp(tok.value,"void"))){
 		//printf("FUNC TIPO\n");
 		if(!strcmp(tok.value,"char")){lastType = CHAR;
 		}else if((!strcmp(tok.value,"int"))){lastType = INT;
 		}else if((!strcmp(tok.value,"float"))){lastType = FLOAT;
-		}else{lastType = BOOL;}        
+		}else if((!strcmp(tok.value,"bool"))){lastType = BOOL;
+		}else{lastType = VOID;}        
 		if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -240,10 +247,23 @@ int func(FILE* ptr){
         }
         if(tok.type == 11){
 			//printf("FUNC ID\n");
+			strcpy(nomeFunc,tok.value);
 			pos = procurar_elemento(tok.value,0,pilha,&ind);
 			if(pos != -1){
-				if(conferir_tipo_func(lastType,pilha,pos) == 0)return ERROR_SIMBOL;
-			}            
+				if(conferir_tipo_func(lastType,pilha,pos) == 0) return ERROR_SIMBOL;
+				declarar = 0;
+				qtdParam = pegar_param(pilha,pos,filaTipos);
+			}else {
+				declarar =1;            
+				set_tipo(pilha,lastType,&ind);
+				set_nome(pilha,tok.value,&ind);
+				set_zombie(pilha,1,&ind);
+				set_categoria(pilha,FUNC,&ind);
+				set_escopo(pilha,0,&ind);
+				set_label(pilha,label-1,&ind);
+				if(lastType == VOID)set_tamanho(pilha,0,&ind);
+				ind++;						
+			}
 			if(indice_fila > 0){
                 get_token_fila(&tok);
             }else{
@@ -258,7 +278,7 @@ int func(FILE* ptr){
 //                    flag = nextTokens(ptr,&tok);
 //                    if(flag != 1) return flag;
 //                }
-                flag = tipo_param(ptr,0,NULL);
+                flag = tipo_param(ptr,declarar,filaTipos,qtdParam);
 				if(flag != 1) return flag;
                 if(indice_fila > 0){
                     get_token_fila(&tok);
@@ -286,7 +306,7 @@ int func(FILE* ptr){
 							}else if((!strcmp(tok.value,"float"))){ lastType = FLOAT;
 							}else{lastType = BOOL; }
                             do{
-		                        flag = decl_var(ptr,1,lastType);
+		                        flag = decl_var(ptr,1,lastType,&numVar);
 								if(flag != 1) return flag;
 		                        if(indice_fila > 0){
 		                            get_token_fila(&tok);
@@ -317,6 +337,11 @@ int func(FILE* ptr){
                                 if(flag != 1) return flag;
                             }
                         }
+						//printf("vai destruir\n");
+						printf("DEMEM %d\n",destruir_func(pilha,&ind));
+						pos = procurar_elemento(nomeFunc,0,pilha,&ind);						
+						printf("RET 0,%d\n",pegar_param(pilha,pos,filaTipos));
+						printf("LABEL L%d\n",label);label++;
                         return 1;
                     }else return SINTAX_ERROR;
                 }else return SINTAX_ERROR;
@@ -325,12 +350,12 @@ int func(FILE* ptr){
     }else return SINTAX_ERROR;
 }
 
-int tipo_param(FILE* ptr,int isDecl,int *tipos){
+int tipo_param(FILE* ptr,int isDecl,int *tipos,int qtd){
     extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     token tok;
-    int flag;
-    printf("ENTROU TIPO_PARAM\n");
+    int flag,i=0,tipo;
+    //printf("ENTROU TIPO_PARAM\n");
     //imprimir_fila();
     if(indice_fila > 0){
         get_token_fila(&tok);
@@ -340,10 +365,17 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
     }
     if(!strcmp(tok.value,"void")){
 		 //printf("encontrado void\n");
+		if(!isDecl){
+			if(qtd != 0) return ERROR_SIMBOL; 		
+		}
         return 1;
     }else if((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool"))){
-		 //printf("encontrado tipo\n");		
-		do{ 
+		 //printf("encontrado tipo\n");
+		do{
+			if(!strcmp(tok.value,"char")){tipo = CHAR;
+			}else if((!strcmp(tok.value,"int"))){ tipo = INT;
+			}else if((!strcmp(tok.value,"float"))){ tipo = FLOAT;
+			}else{tipo = BOOL; } 
 			if(isDecl){       
 				if(!strcmp(tok.value,"char")){set_tipo(pilha,CHAR,&ind);
 				}else if((!strcmp(tok.value,"int"))){ set_tipo(pilha,INT,&ind);
@@ -352,6 +384,9 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
 				set_escopo(pilha,0,&ind);
 				set_categoria(pilha,PARAM,&ind);
 				set_zombie(pilha,1,&ind);			
+			}else{
+				if(qtd == 0) return ERROR_SIMBOL;
+				if(tipos[i++] != tipo)return ERROR_SIMBOL;
 			}
 			if(indice_fila > 0){
             	get_token_fila(&tok);
@@ -362,7 +397,7 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
             if(tok.type == 11){
 				 //printf("encontrado ID\n");
 				if(isDecl){				
-					if(procurar_elemento(tok.value,0,pilha,&ind) != -1) return ERROR_SIMBOL;
+					//if(procurar_elemento(tok.value,0,pilha,&ind) != -1) return ERROR_SIMBOL;
 					set_nome(pilha,tok.value,&ind);ind++;
 				}                
 				if(indice_fila > 0){
@@ -398,6 +433,9 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
                             if(!((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool")))) return SINTAX_ERROR;
                         }else{
 							//printf("pos de volta\n");
+							if(!isDecl){
+								if(i != qtd) return ERROR_SIMBOL;
+							}
                             por_de_volta(tok);
                             return 1;
                         }
@@ -411,11 +449,15 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
                         flag = nextTokens(ptr,&tok);
                         if(flag != 1) return flag;
                     }
+					if(!((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool")))) return SINTAX_ERROR;
                 }else{
+					if(!isDecl){
+						if(i != qtd) return ERROR_SIMBOL;
+					}
                     por_de_volta(tok);
                     return 1;
                 }
-            }else if(strcmp(tok.value,"&")){
+            }else if(!strcmp(tok.value,"&")){
 				 //printf("encontrado &\n");
                 if(indice_fila > 0){
                     get_token_fila(&tok);
@@ -423,16 +465,20 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
                     flag = nextTokens(ptr,&tok);
                     if(flag != 1) return flag;
                 }
-                if(tok.type == 11){
+                if(tok.type == 11){					
 					//printf("encontrado ID\n");
+					if(isDecl){				
+						if(procurar_elemento(tok.value,0,pilha,&ind) != -1) return ERROR_SIMBOL;
+						set_nome(pilha,tok.value,&ind);ind++;
+					}
                     if(indice_fila > 0){
                         get_token_fila(&tok);
                     }else{
                         flag = nextTokens(ptr,&tok);
                         if(flag != 1) return flag;
                     }
-                    if(strcmp(tok.value,",")){
-						//printf("encontrado ,\n");
+                    if(!strcmp(tok.value,",")){
+						printf("enc ,\n");
                         if(indice_fila > 0){
                             get_token_fila(&tok);
                         }else{
@@ -441,6 +487,9 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
                 	        }
                         if(!((! strcmp(tok.value,"char")) || (!strcmp(tok.value,"int")) || (!strcmp(tok.value,"float")) || (!strcmp(tok.value,"bool")))) return SINTAX_ERROR;
                     }else{
+						if(!isDecl){
+							if(i != qtd) return ERROR_SIMBOL;
+						}
                         por_de_volta(tok);
                         return 1;
                     }
@@ -450,12 +499,12 @@ int tipo_param(FILE* ptr,int isDecl,int *tipos){
     }else return SINTAX_ERROR;
 }
 
-int decl_var(FILE* ptr,int escopo, int tipo){
+int decl_var(FILE* ptr,int escopo, int tipo,int *numvar){
     extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag,size;
     token tok;
-    printf("ENTROU DECL_VAR\n");
+    //printf("ENTROU DECL_VAR\n");
     //imprimir_fila();
 	set_escopo(pilha,escopo,&ind);
 	set_tipo(pilha,tipo,&ind);
@@ -468,8 +517,10 @@ int decl_var(FILE* ptr,int escopo, int tipo){
         if(flag != 1) return flag;
     }
     if(tok.type == 11){
+		printf("AMEM ");
 		if( procurar_elemento(tok.value,escopo,pilha,&ind) != -1) return ERROR_SIMBOL;		
 		set_nome(pilha,tok.value,&ind);
+		set_endereco(pilha,*numvar,&ind);(*numvar)++;
         if(indice_fila > 0){
             get_token_fila(&tok);
         }else{
@@ -484,7 +535,8 @@ int decl_var(FILE* ptr,int escopo, int tipo){
                 if(flag != 1) return flag;
             }
             if(tok.type == 9){
-				size = atoi(tok.value);				
+				size = atoi(tok.value);
+				printf(" %d\n",size);				
 				set_tamanho(pilha,size,&ind);
                 if(indice_fila > 0){
                     get_token_fila(&tok);
@@ -500,6 +552,7 @@ int decl_var(FILE* ptr,int escopo, int tipo){
         }else{
             por_de_volta(tok);
 			ind++;
+			printf(" 1\n");
             return 1;
         }
     }else return SINTAX_ERROR;
@@ -510,7 +563,7 @@ int cmd(FILE* ptr){
     extern int indice_fila;
     int flag;
     token tok,taux;
-    printf("ENTROU CMD\n");
+    //printf("ENTROU CMD\n");
     if(indice_fila > 0){
         get_token_fila(&tok);
     }else{
@@ -782,7 +835,7 @@ int expr(FILE* ptr){
     extern int indice_fila;
     int flag;
     token tok;
-    printf("ENTROU EXPR\n");
+    //printf("ENTROU EXPR\n");
     flag = expr_simp(ptr);
 	if(flag != 1) return flag;    
 	if(indice_fila > 0){
@@ -807,7 +860,9 @@ int expr_simp(FILE* ptr){
     extern int indice_fila;
     int flag;
     token tok;
-    printf("ENTROU EXPR_SIMP\n");
+	char op[6];
+	strcpy(op,"");
+    //printf("ENTROU EXPR_SIMP\n");
     if(indice_fila > 0){
         get_token_fila(&tok);
     }else{
@@ -816,8 +871,8 @@ int expr_simp(FILE* ptr){
     }
 	//printf("EXSIM read 1 val = %s\n",tok.value);
     if(!strcmp(tok.value,"+") || !strcmp(tok.value,"-")){
-		//printf("EXPSIM +-\n");
-        flag = termo(ptr);
+		//printf("EXPSIM +-\n");        
+		flag = termo(ptr);
 		if(flag != 1)return flag;
     }else{
 		//printf("EXPSIM s/ +-\n");
@@ -832,7 +887,12 @@ int expr_simp(FILE* ptr){
         if(flag != 1) return flag;
     }
     while((!strcmp(tok.value,"+")) || (!strcmp(tok.value,"-")) || (!strcmp(tok.value,"||")) ){
-		//printf("EXPSIM while +-||\n");        
+		//printf("EXPSIM while +-||\n");
+		if(!strcmp(tok.value,"+")){
+			strcpy(op,"ADD\n");		
+		}else{
+			strcpy(op,"SUB\n");
+		}        
 		flag = termo(ptr);
 		if(flag != 1) return flag;
         if(indice_fila > 0){
@@ -841,6 +901,7 @@ int expr_simp(FILE* ptr){
             flag = nextTokens(ptr,&tok);
             if(flag != 1) return flag;
         }
+		printf("%s",op);
     }
     por_de_volta(tok);
     return 1;
@@ -850,8 +911,10 @@ int termo(FILE* ptr){
     extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
+	char op[5];
     token tok;
-	printf("ENTROU TERMO\n");
+	strcpy(op,"");
+	//printf("ENTROU TERMO\n");
     flag = fator(ptr);
 	if(flag != 1) return flag;    
 	if(indice_fila > 0){
@@ -862,6 +925,11 @@ int termo(FILE* ptr){
     }
 	//printf("TERM %s\n",tok.value);
     while((!strcmp(tok.value,"*")) || (!strcmp(tok.value,"/")) || (!strcmp(tok.value,"&&")) ){
+		if((!strcmp(tok.value,"*"))){
+			strcpy(op,"MUL");		
+		}else if((!strcmp(tok.value,"/"))){
+			strcpy(op,"DIV");
+		}else{}		
 		flag = fator(ptr);
 		if(flag != 1) return flag;
         if(indice_fila > 0){
@@ -871,6 +939,7 @@ int termo(FILE* ptr){
             if(flag != 1) return flag;
         }
     }
+	if(strcmp(op,"")) printf("%s\n",op);
     por_de_volta(tok);
     return 1;
 }
@@ -878,9 +947,11 @@ int termo(FILE* ptr){
 int fator(FILE *ptr){
     extern token fila_tokens[TAM_FILA];
     extern  int indice_fila;
+	escAdd add;
     int flag;
+	char id[30];
     token tok;
-    printf("ENTROU FATOR\n");
+    //printf("ENTROU FATOR\n");
     if(indice_fila > 0){
         get_token_fila(&tok);
     }else{
@@ -889,6 +960,7 @@ int fator(FILE *ptr){
     }
 	//printf("FAT val = %s\n",tok.value);
     if(tok.type == 11){
+		strcpy(id,tok.value);
 		//printf("id found\n");        
 		if(indice_fila > 0){
             get_token_fila(&tok);
@@ -931,6 +1003,8 @@ int fator(FILE *ptr){
             if(!strcmp(tok.value,"]")) return 1;
             else return SINTAX_ERROR;
         }else{
+			add = get_adress(id,pilha,&ind);
+			printf("LOAD %d,%d\n",add.escopo,add.add);
             por_de_volta(tok);
             return 1;
         }
@@ -952,6 +1026,7 @@ int fator(FILE *ptr){
 		if(flag != 1) return flag;        
 		return 1;
     }else if(tok.type == 9){ //intcon
+		printf("PUSH %s\n",tok.value);
 		//printf("FAT intcon\n");
         return 1;
     }else if(tok.type == 25){ //realcon
@@ -970,8 +1045,10 @@ int atrib(FILE* ptr){
     extern token fila_tokens[TAM_FILA];
     extern int indice_fila;
     int flag;
+	escAdd escadd;
     token tok;
-    printf("ENTROU ATRIB\n");
+	char id[20];
+    //printf("ENTROU ATRIB\n");
 	//imprimir_fila();
     if(indice_fila > 0){
         get_token_fila(&tok);
@@ -979,7 +1056,9 @@ int atrib(FILE* ptr){
         flag = nextTokens(ptr,&tok);
         if(flag != 1) return flag;
     }
-    if(tok.type == 11){ 
+    if(tok.type == 11){
+		strcpy(id,tok.value);
+		escadd = get_adress(id,pilha,&ind); 
 		//printf("ATT ID\n");
         if(indice_fila > 0){
             get_token_fila(&tok);
@@ -1009,6 +1088,7 @@ int atrib(FILE* ptr){
 			//printf("ATT =\n");
             flag = expr(ptr);
 			if(flag != 1)return flag;
+			printf("STOR %d,%d\n",escadd.escopo,escadd.add);
             return 1;
         }else return SINTAX_ERROR;
     }else return SINTAX_ERROR;

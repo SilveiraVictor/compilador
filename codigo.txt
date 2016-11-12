@@ -1,8 +1,9 @@
-void main(int argc);
+int x,z;
 
-int main(int argc){
-	int teste;
-	char a,c,d[5];
-	float b;
-	bool flag;
+void main(int a, int b){
+	int c,d;
+	x = 2+1*3+4;
+	return c;
 }
+
+
